@@ -1,6 +1,6 @@
 Author: Jesse Oved [jesseoved@arizona.edu]  
 Course: Undergrad 433
-Date: [2]. [10], 2025
+Date: 2. 10, 2025
 
 **PLEASE UPDATE THIS README TO INCLUDE:**
 * a text description of how to run your program, 
