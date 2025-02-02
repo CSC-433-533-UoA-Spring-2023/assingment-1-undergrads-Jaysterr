@@ -16,7 +16,7 @@ Description:
 Included files (**PLEASE ADD/UPDATE THIS LIST**):
 * index.html    -- a sample html file with a canvas
 * a01.js        -- a sample javascript file for functionality with the image uploading, and a method to parse PPM images
-* Math.js		-- some math functions that you can use and extend yourself
+* Math.js		-- Math functions and data structures. Including Matrix transformations, and vec2 and vec3 classes.
 * bunny.ppm     -- a test image
 
 
