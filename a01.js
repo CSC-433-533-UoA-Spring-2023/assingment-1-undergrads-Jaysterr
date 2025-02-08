@@ -1,8 +1,8 @@
 /*
   Basic File I/O for displaying
   Skeleton Author: Joshua A. Levine
-  Modified by: Amir Mohammad Esmaieeli Sikaroudi
-  Email: amesmaieeli@email.arizona.edu
+  Modified by: Amir Mohammad Esmaieeli Sikaroudi & Jesse Oved
+  Email: amesmaieeli@email.arizona.edu, jesseoved@arizona.edu
 */
 
 
@@ -14,11 +14,12 @@ var ctx = canvas.getContext('2d');
 // The width and height of the image
 var width = 0;
 var height = 0;
+
 // The image data
 var ppm_img_data;
 
 //Function to process upload
-var upload = function () {
+var upload = async function () {
     if (input.files.length > 0) {
         var file = input.files[0];
         console.log("You chose", file.name);
@@ -40,11 +41,11 @@ var upload = function () {
             // *** The code below is for the template to show you how to use matrices and update pixels on the canvas.
             // *** Modify/remove the following code and implement animation
 
-	    // Create a new image data object to hold the new image
+    	    // Create a new image data object to hold the new image
             var newImageData = ctx.createImageData(width, height);
-	    var transMatrix = GetTranslationMatrix(0, height);// Translate image
-	    var scaleMatrix = GetScalingMatrix(1, -1);// Flip image y axis
-	    var matrix = MultiplyMatrixMatrix(transMatrix, scaleMatrix);// Mix the translation and scale matrices
+	        var transMatrix = GetTranslationMatrix(0, height);// Translate image
+	        var scaleMatrix = GetScalingMatrix(1, -1);// Flip image y axis
+	        var matrix = MultiplyMatrixMatrix(transMatrix, scaleMatrix);// Mix the translation and scale matrices
             
             // Loop through all the pixels in the image and set its color
             for (var i = 0; i < ppm_img_data.data.length; i += 4) {
@@ -66,10 +67,43 @@ var upload = function () {
             // Draw the new image
             ctx.putImageData(newImageData, canvas.width/2 - width/2, canvas.height/2 - height/2);
 	    
-	    // Show matrix
+	        // Show matrix
             showMatrix(matrix);
         }
     }
+}
+
+var t = 0.0;
+var rotateImage = function (){
+    t += 5;
+
+    var newImageData = ctx.createImageData(width, height);
+    var rotMat = GetRotationMatrix(t);
+    var translateMat = GetTranslationMatrix( width / 2, height / 2);
+    var translateMatundo = GetTranslationMatrix( - width / 2, - height / 2);
+    var matrix = MultiplyMatrixMatrix(translateMat, rotMat);
+    matrix = MultiplyMatrixMatrix(matrix, translateMatundo);
+
+    for (var i = 0; i < ppm_img_data.data.length; i += 4) {
+        // Get the pixel location in x and y with (0,0) being the top left of the image
+        var pixel = [Math.floor(i / 4) % width, 
+                     Math.floor(i / 4) / width, 1];
+
+        // Get the location of the sample pixel
+        var samplePixel = MultiplyMatrixVector(matrix, pixel);
+
+        // Floor pixel to integer
+        samplePixel[0] = Math.floor(samplePixel[0]);
+        samplePixel[1] = Math.floor(samplePixel[1]);
+
+        setPixelColor(newImageData, samplePixel, i);
+    }
+
+    // Draw the new image
+    ctx.putImageData(newImageData, canvas.width/2 - width/2, canvas.height/2 - height/2);
+
+    // Show matrix
+    showMatrix(matrix);
 }
 
 // Show transformation matrix on HTML
@@ -156,3 +190,7 @@ function parsePPM(file_data){
 
 //Connect event listeners
 input.addEventListener("change", upload);
+
+window.setInterval(rotateImage, 16);
+
+rotateImage();
