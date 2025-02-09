@@ -6,13 +6,17 @@
 */
 
 // constants
-const ROTATE_SPEED = 2; // increase to speed up rotation
+const ROTATE_SPEED = 3; // increase to speed up rotation
 
 //access DOM elements we'll use
 var input = document.getElementById("load_image");
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
-
+var slider = document.getElementById("rotate_speed");
+var sliderOutput = document.getElementById("rotate_value");
+slider.oninput = function() {
+    sliderOutput.innerHTML = this.value;
+  } 
 // The width and height of the image
 var width = 0;
 var height = 0;
@@ -33,54 +37,24 @@ var upload = async function () {
             //if successful, file data has the contents of the uploaded file
             var file_data = fReader.result;
             parsePPM(file_data);
-
-            /*
-            * TODO: ADD CODE HERE TO DO 2D TRANSFORMATION and ANIMATION
-            * Modify any code if needed
-            * Hint: Write a rotation method, and call WebGL APIs to reuse the method for animation
-            */
-	    
-            // *** The code below is for the template to show you how to use matrices and update pixels on the canvas.
-            // *** Modify/remove the following code and implement animation
-
-    	    // Create a new image data object to hold the new image
-            var newImageData = ctx.createImageData(width, height);
-	        var transMatrix = GetTranslationMatrix(0, height);// Translate image
-	        var scaleMatrix = GetScalingMatrix(1, -1);// Flip image y axis
-	        var matrix = MultiplyMatrixMatrix(transMatrix, scaleMatrix);// Mix the translation and scale matrices
-            
-            // Loop through all the pixels in the image and set its color
-            for (var i = 0; i < ppm_img_data.data.length; i += 4) {
-
-                // Get the pixel location in x and y with (0,0) being the top left of the image
-                var pixel = [Math.floor(i / 4) % width, 
-                             Math.floor(i / 4) / width, 1];
-        
-                // Get the location of the sample pixel
-                var samplePixel = MultiplyMatrixVector(matrix, pixel);
-
-                // Floor pixel to integer
-                samplePixel[0] = Math.floor(samplePixel[0]);
-                samplePixel[1] = Math.floor(samplePixel[1]);
-
-                setPixelColor(newImageData, samplePixel, i);
-            }
-
-            // Draw the new image
-            ctx.putImageData(newImageData, canvas.width/2 - width/2, canvas.height/2 - height/2);
-	    
-	        // Show matrix
-            showMatrix(matrix);
         }
     }
 }
 
 var t = 0.0;
 var rotateImage = function (){
-    if (ppm_img_data == null) return;
+    if (ppm_img_data == null) {
+        window.requestAnimationFrame(rotateImage);
+        return;
+    }
 
-    t += ROTATE_SPEED;
-
+    // increment by current rotation speed. 
+    // remember to convert to float first because js will just let you increment a number using a string???
+    // what does that even do? does it do concatenation and turn t into a string? 
+    // but if it does then WHY am I still able to use it in arithmetic????
+    // I do not like js :(
+    t += parseFloat(slider.value);
+    
     var size = maxCanvasSize();
     var newImageData = ctx.createImageData(size, size);
 
@@ -109,23 +83,25 @@ var rotateImage = function (){
         samplePixel[0] = Math.floor(samplePixel[0]);
         samplePixel[1] = Math.floor(samplePixel[1]);
         
-        // if pixel outside of bounds, just set to blank.
-        if (samplePixel[0] < 0 || samplePixel[0] >= width ||
-            samplePixel[1] < 0 || samplePixel[1] >= height) {
-            setPixelCustomColor(newImageData, i, 255, 255, 255, 0);
+        // if pixel inside image bounds, we can sample
+        if (inRange(samplePixel[0], 0, width) && inRange(samplePixel[1], 0, height)) {
+            setPixelColor(newImageData, samplePixel, i);
         } else {
-        // Otherwise, set the pixel color from the image
-        setPixelColor(newImageData, samplePixel, i);
+            // otherwise we set it to white/transparent
+            setPixelCustomColor(newImageData, i, 255, 255, 255, 0);
         }
     }
     // var center = Math.floor((size * size * 4) / 2) - size * 2;
     // for (var i = center-16; i < center + 16; i += 4) {
     //     setPixelCustomColor(newImageData, i, 255, 0, 0, 255);
     // }
+    
+    // write to canvas
     ctx.putImageData(newImageData, canvas.width/2 - width/2, canvas.height/2 - height/2);
 
     // Show matrix
     showMatrix(matrix);
+    window.requestAnimationFrame(rotateImage);
 }
 
 function maxCanvasSize(){
@@ -229,5 +205,5 @@ function parsePPM(file_data){
 input.addEventListener("change", upload);
 
 // start animation
-window.setInterval(rotateImage, 16);
-rotateImage();
+window.requestAnimationFrame(rotateImage);
+//rotateImage();

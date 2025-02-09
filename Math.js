@@ -1,3 +1,9 @@
+
+// returns true if number is between min (inclusive) and max (exclusive)
+function inRange(num, min, max) {
+    return min <= num && num < max;
+}
+
 // Converts an angle in degrees to radians and returns it
 function Deg2Rad(deg) {
     return deg * Math.PI / 180;
