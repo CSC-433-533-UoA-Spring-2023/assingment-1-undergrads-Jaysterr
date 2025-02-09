@@ -1,7 +1,23 @@
+// Converts an angle in degrees to radians and returns it
+function Deg2Rad(deg) {
+    return deg * Math.PI / 180;
+}
+
 
 // Returns the basic rotation matrix given an angle in degrees
-function GetRotationMatrix(angle){
+function GetRotationMatrixDeg(angle){
     var rad = angle * Math.PI / 180;
+    var cos = Math.cos(rad);
+    var sin = Math.sin(rad);
+    return [
+        [cos, -sin, 0],
+        [sin,  cos, 0],
+        [0,    0,   1]
+    ];
+}
+
+// Returns the basic rotation matrix given an angle in radians
+function GetRotationMatrixRad(rad){
     var cos = Math.cos(rad);
     var sin = Math.sin(rad);
     return [
@@ -26,6 +42,15 @@ function GetScalingMatrix(x, y) {
         [x, 0, 0],
         [0, y, 0],
         [0, 0, 1]
+    ];
+}
+
+// Returns a uniform matrix given a scale value
+function GetUniformScalingMatrix(s) {
+    return [
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, s]
     ];
 }
 

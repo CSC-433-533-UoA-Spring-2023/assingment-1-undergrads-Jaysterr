@@ -5,6 +5,8 @@
   Email: amesmaieeli@email.arizona.edu, jesseoved@arizona.edu
 */
 
+// constants
+const ROTATE_SPEED = 2; // increase to speed up rotation
 
 //access DOM elements we'll use
 var input = document.getElementById("load_image");
@@ -75,16 +77,27 @@ var upload = async function () {
 
 var t = 0.0;
 var rotateImage = function (){
-    t += 5;
+    if (ppm_img_data == null) return;
 
-    var newImageData = ctx.createImageData(width, height);
-    var rotMat = GetRotationMatrix(t);
-    var translateMat = GetTranslationMatrix( width / 2, height / 2);
-    var translateMatundo = GetTranslationMatrix( - width / 2, - height / 2);
+    t += ROTATE_SPEED;
+
+    var size = maxCanvasSize();
+    var newImageData = ctx.createImageData(size, size);
+
+    var r = Deg2Rad(t);
+    var rotMat = GetRotationMatrixRad(r);
+
+    var scaleFactor = 1 + (Math.SQRT2 - 1) * Math.abs(Math.sin(2 * r));
+    var scaleMat = GetScalingMatrix(scaleFactor, scaleFactor);
+
+    var translateMat = GetTranslationMatrix( size / 2, size / 2);
+    var undoTranslateMat = GetTranslationMatrix( - size / 2, - size / 2);
+
     var matrix = MultiplyMatrixMatrix(translateMat, rotMat);
-    matrix = MultiplyMatrixMatrix(matrix, translateMatundo);
+    matrix = MultiplyMatrixMatrix(matrix, scaleMat);
+    matrix = MultiplyMatrixMatrix(matrix, undoTranslateMat);
 
-    for (var i = 0; i < ppm_img_data.data.length; i += 4) {
+    for (var i = 0; i < size * size * 4; i += 4) {
         // Get the pixel location in x and y with (0,0) being the top left of the image
         var pixel = [Math.floor(i / 4) % width, 
                      Math.floor(i / 4) / width, 1];
@@ -95,15 +108,28 @@ var rotateImage = function (){
         // Floor pixel to integer
         samplePixel[0] = Math.floor(samplePixel[0]);
         samplePixel[1] = Math.floor(samplePixel[1]);
-
+        
+        // if pixel outside of bounds, just set to blank.
+        if (samplePixel[0] < 0 || samplePixel[0] >= width ||
+            samplePixel[1] < 0 || samplePixel[1] >= height) {
+            setPixelCustomColor(newImageData, i, 255, 255, 255, 0);
+        } else {
+        // Otherwise, set the pixel color from the image
         setPixelColor(newImageData, samplePixel, i);
+        }
     }
-
-    // Draw the new image
+    // var center = Math.floor((size * size * 4) / 2) - size * 2;
+    // for (var i = center-16; i < center + 16; i += 4) {
+    //     setPixelCustomColor(newImageData, i, 255, 0, 0, 255);
+    // }
     ctx.putImageData(newImageData, canvas.width/2 - width/2, canvas.height/2 - height/2);
 
     // Show matrix
     showMatrix(matrix);
+}
+
+function maxCanvasSize(){
+    return Math.max(width, height);
 }
 
 // Show transformation matrix on HTML
@@ -127,6 +153,14 @@ function setPixelColor(newImageData, samplePixel, i){
     newImageData.data[i + 1] = ppm_img_data.data[offset + 1];
     newImageData.data[i + 2] = ppm_img_data.data[offset + 2];
     newImageData.data[i + 3] = 255;
+}
+
+// Sets the color of a pixel in the new image data to white, and transparent
+function setPixelCustomColor(newImageData, i, r, g, b, a) {
+    newImageData.data[i] = r;
+    newImageData.data[i+1] = g;
+    newImageData.data[i+2] = b;
+    newImageData.data[i+3] = a;
 }
 
 // Load PPM Image to Canvas
@@ -186,11 +220,14 @@ function parsePPM(file_data){
     ctx.putImageData(image_data, canvas.width/2 - width/2, canvas.height/2 - height/2);
     //ppm_img_data = ctx.getImageData(0, 0, canvas.width, canvas.height);   // This gives more than just the image I want??? I think it grabs white space from top left?
     ppm_img_data = image_data;
+
+    //makeCanvasSquare();
+
 }
 
 //Connect event listeners
 input.addEventListener("change", upload);
 
+// start animation
 window.setInterval(rotateImage, 16);
-
 rotateImage();
