@@ -73,8 +73,8 @@ var rotateImage = function (){
 
     for (var i = 0; i < size * size * 4; i += 4) {
         // Get the pixel location in x and y with (0,0) being the top left of the image
-        var pixel = [Math.floor(i / 4) % width, 
-                     Math.floor(i / 4) / width, 1];
+        var pixel = [Math.floor(i / 4) % size, 
+                     Math.floor(i / 4) / size, 1];
 
         // Get the location of the sample pixel
         var samplePixel = MultiplyMatrixVector(matrix, pixel);
@@ -82,9 +82,9 @@ var rotateImage = function (){
         // Floor pixel to integer
         samplePixel[0] = Math.floor(samplePixel[0]);
         samplePixel[1] = Math.floor(samplePixel[1]);
-        
+
         // if pixel inside image bounds, we can sample
-        if (inRange(samplePixel[0], 0, width) && inRange(samplePixel[1], 0, height)) {
+        if (inRange(samplePixel[0], 0, size) && inRange(samplePixel[1], 0, size)) {
             setPixelColor(newImageData, samplePixel, i);
         } else {
             // otherwise we set it to white/transparent
@@ -105,7 +105,8 @@ var rotateImage = function (){
 }
 
 function maxCanvasSize(){
-    return Math.max(width, height);
+    var size = Math.min(width, height);
+    return size;
 }
 
 // Show transformation matrix on HTML
@@ -193,7 +194,7 @@ function parsePPM(file_data){
         image_data.data[i + 2] = bytes[pixel_pos * 3 + 2]; // Blue ~ i + 2
         image_data.data[i + 3] = 255; // A channel is deafult to 255
     }
-    ctx.putImageData(image_data, canvas.width/2 - width/2, canvas.height/2 - height/2);
+    //ctx.putImageData(image_data, canvas.width/2 - width/2, canvas.height/2 - height/2);
     //ppm_img_data = ctx.getImageData(0, 0, canvas.width, canvas.height);   // This gives more than just the image I want??? I think it grabs white space from top left?
     ppm_img_data = image_data;
 
